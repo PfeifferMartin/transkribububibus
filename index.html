@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Audio → Transkription</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --surface: #1a2332;
+      --border: #2d3a4d;
+      --text: #e7ecf3;
+      --muted: #8b9cb3;
+      --accent: #3d8bfd;
+      --accent-dim: #2563eb;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      margin: 0;
+      min-height: 100vh;
+      padding: 1.5rem;
+    }
+    main {
+      max-width: 52rem;
+      margin: 0 auto;
+    }
+    h1 {
+      font-weight: 600;
+      font-size: 1.35rem;
+      margin: 0 0 0.25rem;
+      letter-spacing: -0.02em;
+    }
+    .sub {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-bottom: 1.5rem;
+    }
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1.25rem;
+    }
+    label.file-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.75rem;
+      cursor: pointer;
+    }
+    input[type="file"] {
+      position: absolute;
+      width: 0.1px;
+      height: 0.1px;
+      opacity: 0;
+      overflow: hidden;
+    }
+    .file-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.6rem 1rem;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .file-btn:hover { background: var(--accent-dim); }
+    .file-name { color: var(--muted); font-size: 0.9rem; }
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 1rem;
+      align-items: center;
+    }
+    button[type="submit"] {
+      padding: 0.6rem 1.25rem;
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    button[type="submit"]:hover:not(:disabled) {
+      background: rgba(61, 139, 253, 0.12);
+    }
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+    .status {
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+    .status.working { color: #a5b4fc; }
+    .status.err { color: #f87171; }
+    #output {
+      display: none;
+    }
+    #output.visible { display: block; }
+    #output .inner {
+      font-size: 1rem;
+      max-height: none;
+    }
+    #output .inner :first-child { margin-top: 0; }
+    #output .inner :last-child { margin-bottom: 0; }
+    #output .inner p { margin: 0.85em 0; }
+    #output .inner hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 1.25rem 0;
+    }
+    #output .inner strong { color: #fff; font-weight: 600; }
+    #output .inner em { color: var(--muted); font-style: italic; }
+    #output h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin: 0 0 0.75rem;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Audio transkribieren</h1>
+    <p class="sub">Datei wählen und senden — die Verarbeitung kann mehrere Minuten dauern. Diese Seite wartet, bis die Antwort kommt.</p>
+
+    <div class="panel">
+      <form id="form">
+        <label class="file-wrap">
+          <input type="file" id="audio" accept="audio/*,.mp3,.wav,.m4a,.ogg,.webm,.flac" required />
+          <span class="file-btn" aria-hidden="true">Audio auswählen</span>
+          <span class="file-name" id="fileLabel">Keine Datei</span>
+        </label>
+        <div class="row">
+          <button type="submit" id="submitBtn">Transkribieren</button>
+          <span class="status" id="status"></span>
+        </div>
+      </form>
+    </div>
+
+    <div class="panel" id="output">
+      <h2>Transkription</h2>
+      <div class="inner" id="result"></div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script>
+    const WEBHOOK = "https://n8n.m-pfeiffer.at/webhook/72557864-f588-4512-b0f7-6884255f8b7b";
+    /** Feldname für die Datei im FormData — n8n-Workflow ggf. anpassen */
+    const FILE_FIELD = "file";
+
+    const form = document.getElementById("form");
+    const audioInput = document.getElementById("audio");
+    const fileLabel = document.getElementById("fileLabel");
+    const submitBtn = document.getElementById("submitBtn");
+    const statusEl = document.getElementById("status");
+    const output = document.getElementById("output");
+    const resultEl = document.getElementById("result");
+
+    audioInput.addEventListener("change", () => {
+      const f = audioInput.files[0];
+      fileLabel.textContent = f ? f.name : "Keine Datei";
+    });
+
+    function extractText(payload) {
+      if (!payload) return "";
+      if (typeof payload === "string") return payload;
+      const arr = Array.isArray(payload) ? payload : [payload];
+      const texts = [];
+      for (const item of arr) {
+        const parts = item?.content?.parts;
+        if (Array.isArray(parts)) {
+          for (const p of parts) {
+            if (p && typeof p.text === "string") texts.push(p.text);
+          }
+        }
+        if (typeof item?.text === "string") texts.push(item.text);
+      }
+      return texts.join("\n\n");
+    }
+
+    function setStatus(msg, cls) {
+      statusEl.textContent = msg;
+      statusEl.className = "status" + (cls ? " " + cls : "");
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const file = audioInput.files[0];
+      if (!file) return;
+
+      output.classList.remove("visible");
+      resultEl.innerHTML = "";
+      submitBtn.disabled = true;
+
+      const started = Date.now();
+      const tick = setInterval(() => {
+        const s = Math.floor((Date.now() - started) / 1000);
+        const m = Math.floor(s / 60);
+        const r = s % 60;
+        setStatus(
+          m > 0
+            ? `Warte auf Antwort … ${m} Min ${r} s`
+            : `Warte auf Antwort … ${s} s`,
+          "working"
+        );
+      }, 1000);
+
+      const fd = new FormData();
+      fd.append(FILE_FIELD, file, file.name);
+
+      try {
+        const res = await fetch(WEBHOOK, {
+          method: "POST",
+          body: fd,
+          mode: "cors",
+        });
+
+        clearInterval(tick);
+
+        const rawText = await res.text();
+        let data;
+        try {
+          data = JSON.parse(rawText);
+        } catch {
+          data = rawText;
+        }
+
+        if (!res.ok) {
+          setStatus("Fehler " + res.status + (rawText ? ": " + rawText.slice(0, 200) : ""), "err");
+          return;
+        }
+
+        const text = extractText(data);
+        if (!text.trim()) {
+          setStatus("Leere oder unerwartete Antwort.", "err");
+          resultEl.textContent = typeof data === "string" ? data : rawText.slice(0, 2000);
+          output.classList.add("visible");
+          return;
+        }
+
+        setStatus("Fertig.", "");
+        resultEl.innerHTML = marked.parse(text, { breaks: true });
+        output.classList.add("visible");
+      } catch (err) {
+        clearInterval(tick);
+        setStatus(err.message || "Netzwerkfehler (CORS oder Verbindung).", "err");
+      } finally {
+        submitBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
