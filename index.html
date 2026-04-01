@@ -3,55 +3,121 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Audio → Transkription</title>
+  <title>Audio in Text verwandeln</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg: #0f1419;
-      --surface: #1a2332;
-      --border: #2d3a4d;
-      --text: #e7ecf3;
-      --muted: #8b9cb3;
-      --accent: #3d8bfd;
-      --accent-dim: #2563eb;
+      --bg: #0c0f14;
+      --bg2: #121820;
+      --surface: #1a222d;
+      --surface2: #222c3a;
+      --border: #334155;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-hover: #0ea5e9;
+      --success: #34d399;
+      --error: #f87171;
+      --quote: #cbd5e1;
+      --radius: 14px;
+      --shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
     }
     * { box-sizing: border-box; }
     body {
-      font-family: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
-      background: var(--bg);
+      font-family: "DM Sans", system-ui, sans-serif;
+      background: radial-gradient(1200px 600px at 20% -10%, #1e3a5f 0%, transparent 55%),
+        radial-gradient(900px 500px at 100% 20%, #312e81 0%, transparent 50%),
+        var(--bg);
       color: var(--text);
-      line-height: 1.6;
+      line-height: 1.55;
       margin: 0;
       min-height: 100vh;
-      padding: 1.5rem;
+      padding: 1.25rem 1rem 2.5rem;
     }
     main {
-      max-width: 52rem;
+      max-width: 40rem;
       margin: 0 auto;
     }
-    h1 {
-      font-weight: 600;
+    .header {
+      text-align: center;
+      margin-bottom: 1.75rem;
+      padding-top: 0.5rem;
+    }
+    .logo {
+      width: 3rem;
+      height: 3rem;
+      margin: 0 auto 0.75rem;
+      background: linear-gradient(135deg, var(--accent), #818cf8);
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
       font-size: 1.35rem;
-      margin: 0 0 0.25rem;
-      letter-spacing: -0.02em;
+      box-shadow: var(--shadow);
+    }
+    h1 {
+      font-weight: 700;
+      font-size: clamp(1.35rem, 4vw, 1.65rem);
+      margin: 0 0 0.35rem;
+      letter-spacing: -0.03em;
     }
     .sub {
       color: var(--muted);
-      font-size: 0.9rem;
-      margin-bottom: 1.5rem;
+      font-size: 0.95rem;
+      max-width: 28rem;
+      margin: 0 auto;
     }
     .panel {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1.25rem 1.5rem;
-      margin-bottom: 1.25rem;
+      border-radius: var(--radius);
+      padding: 1.35rem 1.35rem 1.5rem;
+      margin-bottom: 1rem;
+      box-shadow: var(--shadow);
+    }
+    .steps {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.1rem;
+      flex-wrap: wrap;
+    }
+    .step {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      padding: 0.35rem 0.65rem;
+      background: var(--surface2);
+      border-radius: 999px;
+      border: 1px solid var(--border);
+    }
+    .step.active {
+      color: var(--accent);
+      border-color: rgba(56, 189, 248, 0.45);
+      background: rgba(56, 189, 248, 0.08);
     }
     label.file-wrap {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 0.75rem;
+      display: block;
       cursor: pointer;
+    }
+    .drop-zone {
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      padding: 1.5rem 1rem;
+      text-align: center;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .drop-zone:hover,
+    label.file-wrap:focus-within .drop-zone {
+      border-color: var(--accent);
+      background: rgba(56, 189, 248, 0.06);
+    }
+    .drop-zone.has-file {
+      border-style: solid;
+      border-color: rgba(52, 211, 153, 0.5);
+      background: rgba(52, 211, 153, 0.06);
     }
     input[type="file"] {
       position: absolute;
@@ -63,55 +129,188 @@
     .file-btn {
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       gap: 0.5rem;
-      padding: 0.6rem 1rem;
+      padding: 0.65rem 1.15rem;
       background: var(--accent);
-      color: #fff;
+      color: #0f172a;
       border: none;
-      border-radius: 8px;
+      border-radius: 10px;
       font-size: 0.95rem;
-      font-weight: 500;
+      font-weight: 600;
       cursor: pointer;
+      font-family: inherit;
     }
-    .file-btn:hover { background: var(--accent-dim); }
-    .file-name { color: var(--muted); font-size: 0.9rem; }
-    .row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.75rem;
-      margin-top: 1rem;
-      align-items: center;
-    }
-    button[type="submit"] {
-      padding: 0.6rem 1.25rem;
-      background: transparent;
-      color: var(--accent);
-      border: 1px solid var(--accent);
-      border-radius: 8px;
-      font-size: 0.95rem;
-      font-weight: 500;
-      cursor: pointer;
-    }
-    button[type="submit"]:hover:not(:disabled) {
-      background: rgba(61, 139, 253, 0.12);
-    }
-    button:disabled {
-      opacity: 0.45;
-      cursor: not-allowed;
-    }
-    .status {
-      font-size: 0.9rem;
+    .file-btn:hover { background: var(--accent-hover); color: #0f172a; }
+    .file-hint {
+      margin: 0.75rem 0 0;
+      font-size: 0.85rem;
       color: var(--muted);
     }
+    .file-name {
+      display: block;
+      margin-top: 0.65rem;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text);
+      word-break: break-word;
+    }
+    .file-meta {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 0.2rem;
+    }
+    .actions {
+      margin-top: 1.25rem;
+    }
+    button[type="submit"] {
+      width: 100%;
+      padding: 0.85rem 1.25rem;
+      background: linear-gradient(180deg, #22d3ee, var(--accent));
+      color: #0f172a;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      box-shadow: 0 4px 20px rgba(56, 189, 248, 0.35);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    button[type="submit"]:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 24px rgba(56, 189, 248, 0.45);
+    }
+    button[type="submit"]:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .status-row {
+      margin-top: 0.85rem;
+      min-height: 1.4rem;
+      font-size: 0.9rem;
+      text-align: center;
+    }
+    .status { color: var(--muted); }
     .status.working { color: #a5b4fc; }
-    .status.err { color: #f87171; }
+    .status.ok { color: var(--success); }
+    .status.err { color: var(--error); }
+
+    .wait-panel {
+      display: none;
+      margin-top: 1.25rem;
+      padding: 1.25rem;
+      background: var(--surface2);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+    .wait-panel.visible { display: block; }
+    .wait-top {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .spinner {
+      width: 2.5rem;
+      height: 2.5rem;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      flex-shrink: 0;
+      animation: spin 0.85s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .wait-timer-wrap {
+      flex: 1;
+      min-width: 0;
+    }
+    .wait-timer {
+      font-size: 1.5rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.02em;
+      margin: 0;
+    }
+    .wait-label {
+      margin: 0.15rem 0 0;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    .progress-bar {
+      height: 6px;
+      background: var(--border);
+      border-radius: 999px;
+      margin-top: 0.75rem;
+      overflow: hidden;
+    }
+    .progress-bar::after {
+      content: "";
+      display: block;
+      height: 100%;
+      width: 30%;
+      background: linear-gradient(90deg, var(--accent), #818cf8);
+      border-radius: 999px;
+      animation: indeterminate 1.8s ease-in-out infinite;
+    }
+    @keyframes indeterminate {
+      0% { transform: translateX(-100%); width: 35%; }
+      50% { width: 55%; }
+      100% { transform: translateX(350%); width: 35%; }
+    }
+    .wait-reassure {
+      font-size: 0.88rem;
+      color: var(--muted);
+      margin: 0 0 1rem;
+      line-height: 1.45;
+    }
+    .quote-wrap {
+      position: relative;
+      min-height: 4.5rem;
+    }
+    .quote-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 0.4rem;
+    }
+    blockquote.ai-quote {
+      margin: 0;
+      padding: 0.65rem 0 0;
+      border: none;
+      font-size: 0.98rem;
+      font-style: italic;
+      color: var(--quote);
+      line-height: 1.5;
+      transition: opacity 0.45s ease;
+    }
+    blockquote.ai-quote.fade-out { opacity: 0; }
+
     #output {
       display: none;
     }
     #output.visible { display: block; }
+    .output-head {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.85rem;
+    }
+    .output-head h2 {
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--success);
+      margin: 0;
+    }
     #output .inner {
       font-size: 1rem;
-      max-height: none;
     }
     #output .inner :first-child { margin-top: 0; }
     #output .inner :last-child { margin-bottom: 0; }
@@ -123,35 +322,76 @@
     }
     #output .inner strong { color: #fff; font-weight: 600; }
     #output .inner em { color: var(--muted); font-style: italic; }
-    #output h2 {
-      font-size: 1rem;
-      font-weight: 600;
-      margin: 0 0 0.75rem;
-      color: var(--muted);
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
     }
   </style>
 </head>
 <body>
   <main>
-    <h1>Audio transkribieren</h1>
-    <p class="sub">Datei wählen und senden — die Verarbeitung kann mehrere Minuten dauern. Diese Seite wartet, bis die Antwort kommt.</p>
+    <header class="header">
+      <div class="logo" aria-hidden="true">✦</div>
+      <h1>Audio in Text verwandeln</h1>
+      <p class="sub">Lade eine Aufnahme hoch — wir warten mit dir, bis die KI fertig ist (oft 1–5 Minuten). Du kannst den Tab offen lassen.</p>
+    </header>
 
     <div class="panel">
+      <div class="steps" aria-hidden="true">
+        <span class="step active" id="step1">1 · Datei</span>
+        <span class="step" id="step2">2 · Starten</span>
+        <span class="step" id="step3">3 · Ergebnis</span>
+      </div>
+
       <form id="form">
-        <label class="file-wrap">
+        <label class="file-wrap" for="audio">
+          <span class="sr-only">Audiodatei wählen</span>
+          <div class="drop-zone" id="dropZone">
+            <span class="file-btn">Datei auswählen</span>
+            <p class="file-hint">MP3, WAV, M4A, OGG und andere gängige Formate</p>
+            <span class="file-name" id="fileLabel">Noch keine Datei gewählt</span>
+            <span class="file-meta" id="fileMeta"></span>
+          </div>
           <input type="file" id="audio" accept="audio/*,.mp3,.wav,.m4a,.ogg,.webm,.flac" required />
-          <span class="file-btn" aria-hidden="true">Audio auswählen</span>
-          <span class="file-name" id="fileLabel">Keine Datei</span>
         </label>
-        <div class="row">
-          <button type="submit" id="submitBtn">Transkribieren</button>
-          <span class="status" id="status"></span>
+
+        <div class="actions">
+          <button type="submit" id="submitBtn">Transkription starten</button>
+          <div class="status-row">
+            <span class="status" id="status" role="status" aria-live="polite"></span>
+          </div>
+        </div>
+
+        <div class="wait-panel" id="waitPanel" aria-live="polite" aria-busy="true" hidden>
+          <div class="wait-top">
+            <div class="spinner" aria-hidden="true"></div>
+            <div class="wait-timer-wrap">
+              <p class="wait-timer" id="waitTimer">0:00</p>
+              <p class="wait-label" id="waitLabel">KI arbeitet an deiner Datei …</p>
+            </div>
+          </div>
+          <div class="progress-bar" aria-hidden="true"></div>
+          <p class="wait-reassure">Längere Wartezeiten sind normal — je länger die Aufnahme, desto mehr Zeit braucht die Analyse.</p>
+          <div class="quote-wrap">
+            <div class="quote-label">Während du wartest</div>
+            <blockquote class="ai-quote" id="aiQuote"></blockquote>
+          </div>
         </div>
       </form>
     </div>
 
     <div class="panel" id="output">
-      <h2>Transkription</h2>
+      <div class="output-head">
+        <span aria-hidden="true">✓</span>
+        <h2>Dein Text</h2>
+      </div>
       <div class="inner" id="result"></div>
     </div>
   </main>
@@ -159,21 +399,269 @@
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script>
     const WEBHOOK = "https://n8n.m-pfeiffer.at/webhook/72557864-f588-4512-b0f7-6884255f8b7b";
-    /** Feldname für die Datei im FormData — n8n-Workflow ggf. anpassen */
     const FILE_FIELD = "file";
+
+    /** Viele kurze Zitate — bei 5 Minuten Wartezeit rotieren sie ohne schnell zu wiederholen */
+    const AI_QUOTES = [
+      "KI ist wie ein sehr fleißiger Praktikant: braucht Zeit, liefert dann oft Gold.",
+      "Gerade werden Wellen in Worte verwandelt — fast wie Magie, nur mit Mathe.",
+      "Ein Modell „denkt“ nicht — es rechnet Muster. Trotzdem klingt’s oft verblüffend menschlich.",
+      "Geduld ist eine Superkraft. Auch für neuronale Netze.",
+      "Zwischen Aufnahme und Text steckt mehr Arbeit, als ein Fortschrittsbalken verraten will.",
+      "Transkription: wo Töne zu Buchstaben werden und Pausen plötzlich Bedeutung haben.",
+      "Die KI hört gerade jedes „äh“ mit — und entscheidet, was wichtig ist.",
+      "Qualität braucht Zeit. Schnell geht’s auch — aber dann liest man’s zweimal.",
+      "Sprache ist unübersichtlich. Deshalb darf’s ein Moment dauern.",
+      "Hinter dem Vorhang: Token, Tensoren und viel Kaffee (metaphorisch).",
+      "Wenn’s still ist, arbeitet sie. Wenn’s piept, ist sie fertig.",
+      "Menschen reden schneller, als sie tippen. KI tippt schneller, als man glaubt — aber nicht instant.",
+      "Akzente, Dialekte, Hintergrundlärm: alles Extra-Hirn für die KI.",
+      "Ein guter Prompt ist wie eine gute Adresse. Deine Datei ist schon unterwegs.",
+      "Die schönsten Texte entstehen nicht in Millisekunden — auch nicht hier.",
+      "KI kann keine Wunder — aber manchmal fühlt es sich so an.",
+      "Gerade werden Silben sortiert wie Bücher im Regal.",
+      "Noch ein Moment: Die Software übersetzt „Klang“ in „Sinn“.",
+      "Algorithmen mögen keine Eile. Nutzer schon — deshalb zählen wir mit.",
+      "Deine Stimme ist einzigartig. Die KI braucht einen Moment, um sie zu verstehen.",
+      "Transkription ist Übersetzung: von Luftschwingungen zu Bedeutung.",
+      "Wer Geduld hat, bekommt sauberere Sätze. So sagt man zumindest.",
+      "Die KI liest zwischen den Zeilen — nachdem sie die Zeilen erst mal erzeugt hat.",
+      "Große Audiodateien, große Matrizen — kleine Wartezeit.",
+      "Fast fertig ist nicht fertig. Aber wir nähern uns.",
+      "Jede Minute Audio ist viele tausend Datenpunkte. Heute sind Datenpunkte billig, Rechenzeit kostet.",
+      "Stillstand ist kein Bug — es ist „Processing“.",
+      "Die Zukunft ist schon da, sie braucht nur noch ein bisschen GPU.",
+      "Manchmal halluziniert KI. Manchmal transkribiert sie nur sehr gründlich.",
+      "Dein Text wird gerade von unsichtbaren Helferlein zusammengesetzt.",
+      "Qualitätssicherung passiert im Hintergrund — du siehst nur das Ergebnis.",
+      "Spracherkennung: wo „Hmm“ und „Also“ zur Kunstform werden.",
+      "Die KI hat keine Deadline — aber du schon. Deshalb bleiben wir dran.",
+      "Ein Modell trainiert auf der ganzen Welt — und arbeitet jetzt für deine Datei.",
+      "Warten ist temporär. Ein gutes Transkript ist (hoffentlich) länger nützlich.",
+      "Tipp: In der Zeit kannst du Wasser trinken. Hydration + KI = Win.",
+      "Was du hörst, ist analog. Was rauskommt, ist digital. Dazwischen: Magie.",
+      "Die Cloud denkt mit — buchstäblich.",
+      "Keine Sorge: Der Tab muss offen bleiben, bis die Antwort da ist.",
+      "KI ist ein Werkzeug. Gerade wird geschraubt.",
+      "Jede Silbe wird gewichtet. Manche mehr, manche weniger.",
+      "Bald hast du wieder etwas zum Kopieren — statt zum Abspielen.",
+      "Sprache ist komprimiertes Denken. Entpacken dauert.",
+      "Die Antwort kommt — so sicher wie nach einem „Bitte warten“.",
+      "Manchmal ist langsamer auch besser — zumindest bei Transkription.",
+      "Deine Aufnahme ist in guten (digitalen) Händen.",
+      "Token für Token: So baut sich Text heute.",
+      "Hinter jeder Antwort steckt Rechenleistung — und viel Statistik.",
+      "Die KI hat keine Gefühle, kann aber trotzdem nette Sätze bauen.",
+      "Wenn’s länger dauert: oft zeichenweise Qualität statt Schnellschuss.",
+      "Audio ist flüchtig. Text bleibt. Fast.",
+      "Gerade wird aus Wellenform — Wortform.",
+      "Ein bisschen Warten schützt vor groben Fehlern. Hoffentlich.",
+      "Die Maschine hört zu — ohne zu urteilen.",
+      "Menschen unterbrechen sich gern. KI sortiert das später.",
+      "Deine Datei ist nicht verloren — sie wird nur verarbeitet.",
+      "Qualität braucht Kontext. Kontext braucht Zeit.",
+      "Noch ein Durchlauf durch die Neuronen …",
+      "KI: keine Intuition, aber viele Parameter.",
+      "Die Antwort ist unterwegs — durch Kabel, Funk und Fantasie.",
+      "Transkription ist wie Tippen in Echtzeit — nur rückwärts und mit Statistik.",
+      "Geduld zahlt sich aus. Oder zumindest Text.",
+      "Was du sagst, zählt. Die KI schreibt’s nur auf.",
+      "Ein Moment noch — Silben werden alphabetisiert.",
+      "Hinter den Kulissen: Matrizen multiplizieren sich fröhlich.",
+      "Die KI kennt viele Sprachen — und viele Arten von Stille.",
+      "Längere Dateien, längere Geduld. Fairer Tausch?",
+      "Fast da: Die letzten Unsicherheiten werden geklärt.",
+      "Deine Stimme → Zahlen → Buchstaben. Einfach, oder?",
+      "Wenn KI träumt, sind das oft Embeddings.",
+      "Kein Grund zur Panik — nur zur Geduld.",
+      "Die beste Transkription ist die, die man nicht zweimal korrigieren muss.",
+      "Gerade: Lautstärke, Rhythmus, Bedeutung — alles auf einen Haufen.",
+      "Manchmal braucht es fünf Minuten. Manchmal weniger. Wir hoffen auf weniger.",
+      "Die KI hat keinen Kaffee getrunken — trotzdem arbeitet sie.",
+      "Aus Rauschen wird Sinn — Schritt für Schritt.",
+      "Warten ist der Teil, den keine Demo zeigt.",
+      "Deine Audio-Wellen surfen gerade durch ein neuronales Netz.",
+      "Text ist komprimierter als Audio — aber nicht komprimierter als Geduld.",
+      "Die Antwort formt sich — wie Nebel, der zu Worten wird.",
+      "KI ist kein Orakel — aber für Transkription oft verdammt nah dran.",
+      "Jede Pause in der Aufnahme ist auch Information.",
+      "Die Maschine liebt klare Aussprache. Sie versucht’s trotzdem mit allem.",
+      "Noch ein bisschen — Qualität vor Geschwindigkeit.",
+      "Was du hörst, war live. Was du lesen wirst, ist editierbar.",
+      "Transkription: Hören auf höherer Ebene.",
+      "Die KI sortiert: Wichtig, weniger wichtig, Hintergrundgeräusch.",
+      "Ein guter Satz braucht manchmal länger als ein schlechter.",
+      "Deine Datei wird Stück für Stück verstanden.",
+      "Algorithmen mögen Ordnung. Gespräche sind chaotisch. Spannend!",
+      "Bald: Copy-Paste statt Rewind.",
+      "Die KI hat keine Uhr — du schon. Deshalb zeigen wir die Zeit.",
+      "Menschen reden in Schleifen. KI versucht, gerade Linien zu bauen.",
+      "Noch etwas Rechenarbeit — dann ist Ruhe im Text.",
+      "Sprache ist Software für Köpfe. Transkription ist Software für Software.",
+      "Deine Geduld wird (hoffentlich) mit Lesbarkeit belohnt.",
+      "Die letzten Prozent sind oft die härtesten — auch bei KI.",
+      "Was passiert? Viele kleine „vielleicht“ werden zu einem „so steht’s da“.",
+      "KI ist trainiert, nicht geboren — deshalb braucht sie manchmal Nachdenkzeit.",
+      "Fast geschafft — die Enden werden zusammengeführt.",
+      "Aus Bits und Bytes werden Wörter und Absätze.",
+      "Die Antwort kommt nicht aus dem Nichts — sie wird berechnet.",
+      "Warten heißt: Der Server gibt alles.",
+      "Deine Aufnahme ist ein Puzzle. Die KI legt die Teile.",
+      "Manchmal hilft ein tiefer Atemzug — der KI leider nicht, dir schon.",
+      "Text ist leise. Audio war laut. Dazwischen: diese Minute.",
+      "Die KI priorisiert Sinn vor Schnelligkeit — idealerweise.",
+      "Noch ein Moment: Satzzeichen werden verhandelt.",
+      "Gute Transkription ist wie Übersetzen zwischen Medien.",
+      "Dein Inhalt bleibt dein Inhalt — wir machen ihn durchsuchbar.",
+      "Die Maschine hat keine Meinung — nur Wahrscheinlichkeiten.",
+      "Wenn’s länger dauert, denk an alle Silben in der Datei.",
+      "Bald kannst du scrollen statt spulen.",
+      "KI: keine Magie, aber oft „wow“.",
+      "Die Antwort ist unterwegs — packetweise.",
+      "Transkription verbindet Ohren und Augen.",
+      "Noch etwas — dann ist aus Audio Prosa.",
+      "Qualität wächst mit der Zeit. Oder zumindest der Text.",
+      "Die KI sortiert Stimmen, Nebengeräusche und Füllwörter.",
+      "Ein letzter Schwung Berechnung …",
+      "Was du bekommst, ist editierbar — perfekt für Nacharbeit.",
+      "Sprache vergisst nichts — außer wenn die Aufnahme abbricht.",
+      "Deine Datei: von Rohmaterial zu lesbarem Ergebnis.",
+      "Die KI hat viele Beispiele gesehen — jetzt eins davon bist du.",
+      "Warten ist Teil des Workflows — nicht der Fehler.",
+      "Bald ist Schluss mit Rätselraten: „Was hat die Person gesagt?“",
+      "Neuronen feuern — im Rechner, nicht bei dir.",
+      "Die Antwort formt sich Wort für Wort.",
+      "Transkription macht Gespräche archivierbar.",
+      "Noch ein bisschen Statistik, dann Literatur.",
+      "Deine Geduld ist der unsichtbare Treibstoff dieses Prozesses.",
+      "KI übersetzt: Klang → Bedeutung → Schrift.",
+      "Fast fertig — die letzten Unklarheiten werden geglättet.",
+      "Was du hörst, wird zu etwas, das du teilen kannst.",
+      "Die Maschine arbeitet — du hast dir eine Pause verdient.",
+      "Aus Wellen werden Wörter. Aus Wörtern werden Ideen.",
+      "Noch einen Moment — Qualität braucht Nachbearbeitung im Modell.",
+      "Deine Stimme verdient Aufmerksamkeit. Die KI gibt sie gerade.",
+      "Text ist leichter zu zitieren als Audio — gleich hast du beides.",
+      "Die Antwort ist wie Pasta: braucht ihre Zeit, wird dann gut.",
+      "Transkription: Hören mit Strg+F.",
+      "Noch etwas GPU-Liebe …",
+      "Bald: Lesen im eigenen Tempo statt Playback-Tempo.",
+      "Die KI hat keine Eile — aber wir zeigen dir, dass es vorangeht.",
+      "Jede Sekunde Audio ist Arbeit. Danke fürs Warten.",
+      "Was kommt, ist maschinell erzeugt — bitte mit gesundem Menschenverstand lesen.",
+      "Die letzte Meile einer Transkription fühlt sich immer am längsten an.",
+      "Deine Datei ist in der Pipeline — nicht in der Warteschlange fürs Vergessen.",
+      "Noch ein Augenblick — Silben werden zu Silben mit Buchstaben.",
+      "KI denkt in Wahrscheinlichkeiten, nicht in Gewissheiten.",
+      "Bald kannst du markieren, kopieren, weiterverwenden.",
+      "Transkription ist digitales Zuhören — intensiv.",
+      "Die Antwort kommt — und bringt Struktur mit.",
+      "Noch ein Durchgang: Klarheit vor Geschwindigkeit.",
+      "Deine Aufnahme wird ernst genommen — Byte für Byte.",
+      "Warten lohnt sich, wenn der Text danach sitzt.",
+      "Die KI sortiert Inhalt von Rauschen — ein ewiger Kampf.",
+      "Fast geschafft — der Text klärt sich auf.",
+      "Was du gleich siehst, kannst du mit einem Klick verbessern.",
+      "Sprache ist flüssig. Schrift ist fest. Dazwischen: wir.",
+      "Noch etwas — dann ist aus Stimme Schrift.",
+      "Die Maschine arbeitet für dich — im wahrsten Sinne des Wortes.",
+      "Transkription verwandelt Vergangenheit (Aufnahme) in Gegenwart (Text).",
+      "Deine Geduld wird in Zeichen umgerechnet.",
+      "Bald: Das Gespräch zum Nachlesen.",
+      "Die KI hat keine Pause-Taste — nur du.",
+      "Letzte Korrekturen im Kopf der Maschine …",
+      "Aus Audio wird Story — gleich.",
+    ];
 
     const form = document.getElementById("form");
     const audioInput = document.getElementById("audio");
     const fileLabel = document.getElementById("fileLabel");
+    const fileMeta = document.getElementById("fileMeta");
+    const dropZone = document.getElementById("dropZone");
     const submitBtn = document.getElementById("submitBtn");
     const statusEl = document.getElementById("status");
     const output = document.getElementById("output");
     const resultEl = document.getElementById("result");
+    const waitPanel = document.getElementById("waitPanel");
+    const waitTimer = document.getElementById("waitTimer");
+    const waitLabel = document.getElementById("waitLabel");
+    const aiQuote = document.getElementById("aiQuote");
+    const step1 = document.getElementById("step1");
+    const step2 = document.getElementById("step2");
+    const step3 = document.getElementById("step3");
 
-    audioInput.addEventListener("change", () => {
+    function formatBytes(n) {
+      if (n < 1024) return n + " B";
+      if (n < 1024 * 1024) return (n / 1024).toFixed(1) + " KB";
+      return (n / (1024 * 1024)).toFixed(1) + " MB";
+    }
+
+    function formatTime(sec) {
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
+      return m + ":" + String(s).padStart(2, "0");
+    }
+
+    function updateFileUI() {
       const f = audioInput.files[0];
-      fileLabel.textContent = f ? f.name : "Keine Datei";
-    });
+      if (f) {
+        fileLabel.textContent = f.name;
+        fileMeta.textContent = formatBytes(f.size);
+        dropZone.classList.add("has-file");
+        step1.classList.add("active");
+        step2.classList.add("active");
+      } else {
+        fileLabel.textContent = "Noch keine Datei gewählt";
+        fileMeta.textContent = "";
+        dropZone.classList.remove("has-file");
+        step2.classList.remove("active");
+      }
+    }
+
+    audioInput.addEventListener("change", updateFileUI);
+
+    let quoteTimerId = null;
+    let quoteIntervalId = null;
+    let lastQuoteIndex = -1;
+
+    function pickQuoteIndex() {
+      if (AI_QUOTES.length <= 1) return 0;
+      let i;
+      do {
+        i = Math.floor(Math.random() * AI_QUOTES.length);
+      } while (i === lastQuoteIndex);
+      lastQuoteIndex = i;
+      return i;
+    }
+
+    function showQuote(text) {
+      aiQuote.classList.add("fade-out");
+      clearTimeout(quoteTimerId);
+      quoteTimerId = setTimeout(() => {
+        aiQuote.textContent = text;
+        aiQuote.classList.remove("fade-out");
+      }, 220);
+    }
+
+    function startQuoteRotation() {
+      stopQuoteRotation();
+      showQuote(AI_QUOTES[pickQuoteIndex()]);
+      const next = () => {
+        const delay = 8000 + Math.floor(Math.random() * 7000);
+        quoteIntervalId = setTimeout(() => {
+          showQuote(AI_QUOTES[pickQuoteIndex()]);
+          next();
+        }, delay);
+      };
+      next();
+    }
+
+    function stopQuoteRotation() {
+      clearTimeout(quoteIntervalId);
+      clearTimeout(quoteTimerId);
+      quoteIntervalId = null;
+      quoteTimerId = null;
+    }
 
     function extractText(payload) {
       if (!payload) return "";
@@ -197,6 +685,13 @@
       statusEl.className = "status" + (cls ? " " + cls : "");
     }
 
+    function setSteps(phase) {
+      [step1, step2, step3].forEach((el) => el.classList.remove("active"));
+      if (phase >= 1) step1.classList.add("active");
+      if (phase >= 2) step2.classList.add("active");
+      if (phase >= 3) step3.classList.add("active");
+    }
+
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       const file = audioInput.files[0];
@@ -205,19 +700,26 @@
       output.classList.remove("visible");
       resultEl.innerHTML = "";
       submitBtn.disabled = true;
+      waitPanel.classList.add("visible");
+      waitPanel.hidden = false;
+      setSteps(2);
+      setStatus("");
+      startQuoteRotation();
 
       const started = Date.now();
-      const tick = setInterval(() => {
+      let tick = setInterval(() => {
         const s = Math.floor((Date.now() - started) / 1000);
-        const m = Math.floor(s / 60);
-        const r = s % 60;
-        setStatus(
-          m > 0
-            ? `Warte auf Antwort … ${m} Min ${r} s`
-            : `Warte auf Antwort … ${s} s`,
-          "working"
-        );
-      }, 1000);
+        waitTimer.textContent = formatTime(s);
+        if (s < 60) {
+          waitLabel.textContent = "KI arbeitet an deiner Datei …";
+        } else if (s < 120) {
+          waitLabel.textContent = "Noch dabei — längere Aufnahmen brauchen länger.";
+        } else if (s < 180) {
+          waitLabel.textContent = "Du machst das gut — wir auch. Einfach weiter warten.";
+        } else {
+          waitLabel.textContent = "Fast geschafft — manchmal dauert der letzte Teil am längsten.";
+        }
+      }, 250);
 
       const fd = new FormData();
       fd.append(FILE_FIELD, file, file.name);
@@ -230,6 +732,9 @@
         });
 
         clearInterval(tick);
+        stopQuoteRotation();
+        waitPanel.classList.remove("visible");
+        waitPanel.hidden = true;
 
         const rawText = await res.text();
         let data;
@@ -240,24 +745,34 @@
         }
 
         if (!res.ok) {
-          setStatus("Fehler " + res.status + (rawText ? ": " + rawText.slice(0, 200) : ""), "err");
+          setStatus("Leider ist etwas schiefgelaufen (Fehler " + res.status + ").", "err");
+          if (rawText) {
+            resultEl.textContent = rawText.slice(0, 500);
+            output.classList.add("visible");
+          }
           return;
         }
 
         const text = extractText(data);
         if (!text.trim()) {
-          setStatus("Leere oder unerwartete Antwort.", "err");
+          setStatus("Die Antwort war leer oder unerwartet.", "err");
           resultEl.textContent = typeof data === "string" ? data : rawText.slice(0, 2000);
           output.classList.add("visible");
+          setSteps(3);
           return;
         }
 
-        setStatus("Fertig.", "");
+        setStatus("Fertig — dein Text ist unten.", "ok");
         resultEl.innerHTML = marked.parse(text, { breaks: true });
         output.classList.add("visible");
+        setSteps(3);
+        output.scrollIntoView({ behavior: "smooth", block: "nearest" });
       } catch (err) {
         clearInterval(tick);
-        setStatus(err.message || "Netzwerkfehler (CORS oder Verbindung).", "err");
+        stopQuoteRotation();
+        waitPanel.classList.remove("visible");
+        waitPanel.hidden = true;
+        setStatus(err.message || "Keine Verbindung — bitte später erneut versuchen.", "err");
       } finally {
         submitBtn.disabled = false;
       }
